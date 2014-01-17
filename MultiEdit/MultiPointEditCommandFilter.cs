@@ -170,13 +170,19 @@ namespace MultiPointEdit
 
         private void DrawSingleSyncPoint(ITrackingPoint trackPoint)
         {
-            if (trackPoint.GetPosition(m_textView.TextSnapshot) >= m_textView.TextSnapshot.Length)
+            var position = trackPoint.GetPosition(m_textView.TextSnapshot);
+            if (position > m_textView.TextSnapshot.Length)
                 return;
 
-            SnapshotSpan span = new SnapshotSpan(trackPoint.GetPoint(m_textView.TextSnapshot), 1);
+            var point = trackPoint.GetPoint(m_textView.TextSnapshot);
+            if (position == m_textView.TextSnapshot.Length)
+                point -= 1;
+
+            var span = new SnapshotSpan(point, 1);
+
             var brush = Brushes.DarkGray;
             var geom = m_textView.TextViewLines.GetLineMarkerGeometry(span);
-            GeometryDrawing drawing = new GeometryDrawing(brush, null, geom);
+            var drawing = new GeometryDrawing(brush, null, geom);
 
             if (drawing.Bounds.IsEmpty)
                 return;
@@ -186,13 +192,13 @@ namespace MultiPointEdit
                 Fill = brush,
                 Width = drawing.Bounds.Width / 6,
                 Height = drawing.Bounds.Height - 4,
-                Margin = new System.Windows.Thickness(0, 2, 0, 0),
+                Margin = new System.Windows.Thickness(0, 2, 0, 0)
             };
 
-            Canvas.SetLeft(rect, geom.Bounds.Left);
+            Canvas.SetLeft(rect, position == m_textView.TextSnapshot.Length ? geom.Bounds.Right : geom.Bounds.Left);
             Canvas.SetTop(rect, geom.Bounds.Top);
-            m_adornmentLayer.AddAdornment(AdornmentPositioningBehavior.TextRelative, span, "MultiEditLayer", rect, null);
 
+            m_adornmentLayer.AddAdornment(AdornmentPositioningBehavior.TextRelative, span, "MultiEditLayer", rect, null);
         }
 
         private void RemoveIntersectedCarets()
